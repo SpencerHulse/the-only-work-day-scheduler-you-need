@@ -1,9 +1,6 @@
 //the object to hold time slot information
 let timeSlots = [];
 
-//displays the current day at the top of the page
-$(currentDay).text(moment().format("dddd, MMMM Do"));
-
 //checks the time at the moment of load
 let loadTime = moment().format("HH mm ss");
 loadTime = loadTime.split(" ");
@@ -73,8 +70,12 @@ let firstHour = setTimeout(startHourlyAudit, timeDiff);
 let loadTimeSlots = () => {
   timeSlots = JSON.parse(localStorage.getItem("timeSlots"));
 
+  //displays the current day at the top of the page
+  let currentDate = moment().format("dddd, MMMM Do");
+  $("#currentDay").text(currentDate);
+
   //if nothing in localStorage, create a new array
-  if (!timeSlots) {
+  if (!timeSlots || timeSlots[9].listDate !== currentDate) {
     timeSlots = [
       { id: 9, text: "" },
       { id: 10, text: "" },
@@ -85,6 +86,7 @@ let loadTimeSlots = () => {
       { id: 15, text: "" },
       { id: 16, text: "" },
       { id: 17, text: "" },
+      { listDate: currentDate },
     ];
   }
 
