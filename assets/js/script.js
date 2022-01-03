@@ -3,12 +3,14 @@ let timeSlots = [];
 
 //checks the time at the moment of load
 let loadTime = moment().format("HH mm ss");
+//creates an array that separates hours, minutes, and seconds
 loadTime = loadTime.split(" ");
 
-//calculates the time difference for the first hour
+//calculates the time difference between load and the first flat hour
 let timeDiff = (60 * (59 - loadTime[1]) + (60 - loadTime[2])) * 1000;
 
-//saves the content in the time slot when the save button is clicked
+/* saves the content in the time slot when the save button is clicked
+it then loads to ensure persistence through time change */
 $("button").on("click", function () {
   buttonID = $(this).attr("id");
   slotID = parseInt(buttonID) + 9;
@@ -21,23 +23,29 @@ $("button").on("click", function () {
 
 //checks the time slots against the current time
 let plannerAudit = () => {
-  console.log("Auditted!");
-  //gets the current time each time the audit is launched
+  //gets the current hour each time the audit is launched
   let currentHour = moment().format("HH");
-  //gets an array of the time slots
+
+  //performs a load to reset the time slots at the start of a new day
+  if (currentHour === 0) {
+    loadTimeSlots();
+    console.log("A new day, a new wipe.");
+    return;
+  }
+
+  //gets an array of all the time slots
   let times = $(".description");
   //loops through the array
   times.each(function () {
     //gets the attribute of each time slot as it is looped through
     let time = $(this).attr("id");
+    //converts the attr id into a number
     time = parseInt(time);
     //assigns the proper color class to each time slot
     if (time < currentHour) {
-      /* gets the text currently entered
-      (needs work because of the diff between 
-      val and text in textarea and div) */
+      // gets the text currently entered
       let text = $(this).text().trim();
-      //turns the textarea into a div if the time has passed
+      //turns the textarea into a div if the time has passed to prevent editing
       let timeSlotDiv = $("<div>")
         .addClass("col-10 description past")
         .attr("id", time)
@@ -51,30 +59,32 @@ let plannerAudit = () => {
   });
 };
 
-//the first audit that is dependent on load time
+//the first audit done on the nearest hour after load
 let startHourlyAudit = () => {
   hourInterval();
   plannerAudit();
 };
 
-//launches an audit every hour on the hour
+//launches an audit at the start of every hour
 let hourInterval = () => {
   setInterval(function () {
     plannerAudit();
   }, 1000 * 60 * 60);
 };
 
-//sets a timeout to begin hourly audits on the hour
+//sets a timeout to launch the first audit on the nearest flat hour
 let firstHour = setTimeout(startHourlyAudit, timeDiff);
 
+//loads the time slots in local storage
 let loadTimeSlots = () => {
+  //converts data from the localStorage string
   timeSlots = JSON.parse(localStorage.getItem("timeSlots"));
 
   //displays the current day at the top of the page
   let currentDate = moment().format("dddd, MMMM Do");
   $("#currentDay").text(currentDate);
 
-  //if nothing in localStorage, create a new array
+  //if nothing in localStorage or if it is a new day, create a new array
   if (!timeSlots || timeSlots[9].listDate !== currentDate) {
     timeSlots = [
       { id: 9, text: "" },
@@ -88,16 +98,21 @@ let loadTimeSlots = () => {
       { id: 17, text: "" },
       { listDate: currentDate },
     ];
+    //performs a save to wipe the old if it is a new day
+    saveTimeSlots();
   }
 
-  //goes through each time slot and loads in text from saved file
+  //goes through each time slot and loads in text
   $.each(timeSlots, function (timeSlot) {
+    //gets the id
     let id = timeSlots[timeSlot].id;
+    //gets the text
     let text = timeSlots[timeSlot].text;
+    //assigns the text to the time slot using the id
     $(`#${id}`).text(text);
   });
 
-  //does an audit
+  //performs an initial audit
   plannerAudit();
 };
 
