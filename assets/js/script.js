@@ -25,11 +25,12 @@ $("button").on("click", function () {
 let plannerAudit = () => {
   //gets the current hour each time the audit is launched
   let currentHour = moment().format("HH");
+  let currentDate = moment().format("dddd, MMMM Do");
 
   //performs a load to reset the time slots at the start of a new day
-  if (currentHour === 0) {
-    loadTimeSlots();
-    console.log("A new day, a new wipe.");
+  if (currentDate !== timeSlots[9].listDate) {
+    console.log("A new day, a new wipe. " + currentDate);
+    window.location.reload();
     return;
   }
 
